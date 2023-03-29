@@ -1,14 +1,14 @@
 # OPTIFonts
 Download & Install All OPTI Fonts
 
-# How to use:
+# How to set up dependencies:
 - Install Google Chrome
 - Install python3
 - Install python3 dependencies:
 
 <code>pip install bs4 requests selenium</code>
 
-- Usage:
+# Usage:
 Run in the repository folder:
 
 <code>python main.py</code>
