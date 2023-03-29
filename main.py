@@ -71,7 +71,8 @@ def click_link(driver, link_url):
     driver.switch_to.window(driver.window_handles[0])  # switch back to the main window
 
 
-def install_fonts_from_downloads(downloads_dir):
+def install_fonts_from_downloads():
+    downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
     # Search for .rar files in the downloads directory
     rar_files = glob.glob(downloads_dir + '/*.rar')
 
@@ -104,10 +105,8 @@ def main():
             click_link(driver, current_link)
         driver.quit()
 
+    install_fonts_from_downloads()
+
 
 if __name__ == '__main__':
     main()
-
-    # Define your downloads directory
-    downloads_folder = 'C:/Users/AxelFC/Downloads'
-    install_fonts_from_downloads(downloads_folder)
