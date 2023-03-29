@@ -2,8 +2,8 @@
 Download All OPTI Fonts
 
 # How to use:
-- Install python
-- Install python dependencies
+- Install python3
+- Install python3 dependencies
 <code>pip install bs4 requests selenium</code>
 
 - Usage:
