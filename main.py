@@ -9,6 +9,7 @@ import os
 import subprocess
 import shutil
 import glob
+import fontTools
 
 
 def get_links(page_url):
@@ -75,8 +76,19 @@ def click_link(driver, link_url):
         pass
 
 
-def install_fonts_from_downloads():
+def remove_zip_files(zip_files):
+    # Ask user if they want to remove the .rar files
+    remove_rars = input("Do you want to remove the .rar files? (y/n) ")
+    if remove_rars.lower() == 'y':
+        for zip_file in zip_files:
+            os.remove(zip_file)
+
+
+def unzip_fonts_from_downloads():
     downloads_dir = os.path.expanduser("~") + os.sep + "Downloads"
+    temp_dir = downloads_dir + os.sep + "temp"
+    shutil.rmtree(temp_dir, ignore_errors=True)
+    os.makedirs(temp_dir, exist_ok=True)
 
     all_zip_files = glob.glob(downloads_dir + '/*.zip')
     zip_files = []
@@ -88,32 +100,28 @@ def install_fonts_from_downloads():
         print("No opti-*.zip files found in Downloads directory.")
         return
 
+    # Loop through the opti-*.rar files
+    for zip_file in zip_files:
+        # Extract the contents of the .rar file to a temporary directory
+        temp_dir = os.path.join(os.path.dirname(zip_file), 'temp')
+        shutil.unpack_archive(zip_file, temp_dir)
+    remove_zip_files(zip_files)
+
+
+def install_fonts_from_temp_folder():
+    temp_dir = os.path.expanduser("~") + os.sep + "Downloads" + os.sep + "temp"
     # Ask user if they want to install the fonts
     install_fonts = input("Do you want to install the fonts? (y/n) ")
     if install_fonts.lower() != 'y':
         return
 
-    # Loop through the opti-*.rar files
-    for zip_file in zip_files:
-        # Extract the contents of the .rar file to a temporary directory
-        temp_dir = os.path.join(os.path.dirname(zip_file), 'temp')
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        os.makedirs(temp_dir, exist_ok=True)
-        shutil.unpack_archive(zip_file, temp_dir)
+    # Find any .ttf or .otf files in the temporary directory and install them
+    font_files = glob.glob(temp_dir + '/*.ttf') + glob.glob(temp_dir + '/*.otf')
+    for font_file in font_files:
+        subprocess.call(['powershell.exe', '-Command', 'Install-Font', font_file])
 
-        # Find any .ttf or .otf files in the temporary directory and install them
-        font_files = glob.glob(temp_dir + '/*.ttf') + glob.glob(temp_dir + '/*.otf')
-        for font_file in font_files:
-            subprocess.call(['powershell.exe', '-Command', 'Install-Font', font_file])
-
-        # Delete the temporary directory
-        shutil.rmtree(temp_dir, ignore_errors=True)
-
-    # Ask user if they want to remove the .rar files
-    remove_rars = input("Do you want to remove the .rar files? (y/n) ")
-    if remove_rars.lower() == 'y':
-        for zip_file in zip_files:
-            os.remove(zip_file)
+    # Delete the temporary directory
+    # shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def main():
@@ -131,6 +139,7 @@ def main():
 
 if __name__ == '__main__':
     main()
-    print("All font .rar files downloaded. Installing.")
-    # install_fonts_from_downloads()
+    print("All font .zip files downloaded in the Downloads/temp folder. Install them manually.")
+    unzip_fonts_from_downloads()
+    # install_fonts_from_temp_folder()
 
