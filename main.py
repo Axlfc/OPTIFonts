@@ -76,17 +76,30 @@ def click_link(driver, link_url):
 
 
 def install_fonts_from_downloads():
-    downloads_dir = os.path.join(os.path.expanduser("~"), "Downloads")
-    # Search for .rar files in the downloads directory
-    rar_files = glob.glob(downloads_dir + '/*.rar')
+    downloads_dir = os.path.expanduser("~") + os.sep + "Downloads"
 
-    # Loop through the .rar files
-    for rar_file in rar_files:
+    all_zip_files = glob.glob(downloads_dir + '/*.zip')
+    zip_files = []
+    for zip_file in all_zip_files:
+        if "opti-" in zip_file:
+            zip_files.append(zip_file)
+
+    if not zip_files:
+        print("No opti-*.zip files found in Downloads directory.")
+        return
+
+    # Ask user if they want to install the fonts
+    install_fonts = input("Do you want to install the fonts? (y/n) ")
+    if install_fonts.lower() != 'y':
+        return
+
+    # Loop through the opti-*.rar files
+    for zip_file in zip_files:
         # Extract the contents of the .rar file to a temporary directory
-        temp_dir = os.path.join(os.path.dirname(rar_file), 'temp')
+        temp_dir = os.path.join(os.path.dirname(zip_file), 'temp')
         shutil.rmtree(temp_dir, ignore_errors=True)
         os.makedirs(temp_dir, exist_ok=True)
-        subprocess.call(['unrar', 'x', '-o+', rar_file, temp_dir])
+        shutil.unpack_archive(zip_file, temp_dir)
 
         # Find any .ttf or .otf files in the temporary directory and install them
         font_files = glob.glob(temp_dir + '/*.ttf') + glob.glob(temp_dir + '/*.otf')
@@ -95,6 +108,12 @@ def install_fonts_from_downloads():
 
         # Delete the temporary directory
         shutil.rmtree(temp_dir, ignore_errors=True)
+
+    # Ask user if they want to remove the .rar files
+    remove_rars = input("Do you want to remove the .rar files? (y/n) ")
+    if remove_rars.lower() == 'y':
+        for zip_file in zip_files:
+            os.remove(zip_file)
 
 
 def main():
@@ -109,10 +128,9 @@ def main():
             click_link(driver, current_link)
         driver.quit()
 
-    # install_fonts_from_downloads()
-
 
 if __name__ == '__main__':
     main()
+    print("All font .rar files downloaded. Installing.")
     # install_fonts_from_downloads()
 
