@@ -22,10 +22,7 @@ def get_links(page_url):
 
 def create_main_urls():
     links = []
-    my_Test_List = ["n", "m", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
-
-    #for letter in list(string.ascii_lowercase):
-    for letter in my_Test_List:
+    for letter in list(string.ascii_lowercase):
         url = "http://abfonts.freehostia.com/opti/fonts-" + letter + "/index.htm"
         links.append(url)
     return links
