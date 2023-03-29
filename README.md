@@ -14,4 +14,4 @@ Run in the repository folder in a Powershell Terminal with Administrator Privile
 <code>python main.py</code>
 
 # TODO:
-Install All OPTI Fonts (in-progress)
+Install Type1 OPTI Fonts
