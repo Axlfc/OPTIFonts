@@ -6,5 +6,8 @@ Download All OPTI Fonts
 - Install python dependencies
 <code>pip install bs4 requests bs4</code>
 
+- Usage:
+<code>python main.py</code>
+
 # TODO:
 Install All OPTI Fonts
