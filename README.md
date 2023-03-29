@@ -2,6 +2,7 @@
 Download & Install All OPTI Fonts
 
 # How to use:
+- Install Google Chrome
 - Install python3
 - Install python3 dependencies:
 
