@@ -1,5 +1,5 @@
 # OPTIFonts
-Download All OPTI Fonts
+Download & Install All OPTI Fonts
 
 # How to use:
 - Install python3
@@ -12,4 +12,4 @@ Download All OPTI Fonts
 <code>python main.py</code>
 
 # TODO:
-Install All OPTI Fonts
+Install All OPTI Fonts (in-progress)
