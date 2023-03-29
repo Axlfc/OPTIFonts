@@ -4,6 +4,10 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+import os
+import subprocess
+import shutil
+import glob
 
 
 def get_links(page_url):
@@ -67,6 +71,27 @@ def click_link(driver, link_url):
     driver.switch_to.window(driver.window_handles[0])  # switch back to the main window
 
 
+def install_fonts_from_downloads(downloads_dir):
+    # Search for .rar files in the downloads directory
+    rar_files = glob.glob(downloads_dir + '/*.rar')
+
+    # Loop through the .rar files
+    for rar_file in rar_files:
+        # Extract the contents of the .rar file to a temporary directory
+        temp_dir = os.path.join(os.path.dirname(rar_file), 'temp')
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        os.makedirs(temp_dir, exist_ok=True)
+        subprocess.call(['unrar', 'x', '-o+', rar_file, temp_dir])
+
+        # Find any .ttf or .otf files in the temporary directory and install them
+        font_files = glob.glob(temp_dir + '/*.ttf') + glob.glob(temp_dir + '/*.otf')
+        for font_file in font_files:
+            subprocess.call(['powershell.exe', '-Command', 'Install-Font', font_file])
+
+        # Delete the temporary directory
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 def main():
     links = create_main_urls()
     for i in range(0, len(links) - 1):
@@ -82,3 +107,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+    # Define your downloads directory
+    downloads_folder = 'C:/Users/AxelFC/Downloads'
+    install_fonts_from_downloads(downloads_folder)
