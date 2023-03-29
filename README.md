@@ -9,7 +9,7 @@ Download & Install All OPTI Fonts (In Windows)
 <code>pip install bs4 requests selenium</code>
 
 # Usage:
-Run in the repository folder:
+Run in the repository folder in a Powershell Terminal with Administrator Privileges:
 
 <code>python main.py</code>
 
