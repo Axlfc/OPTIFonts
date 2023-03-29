@@ -3,6 +3,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 import os
 import subprocess
@@ -21,7 +22,10 @@ def get_links(page_url):
 
 def create_main_urls():
     links = []
-    for letter in list(string.ascii_lowercase):
+    my_Test_List = ["n", "m", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
+
+    #for letter in list(string.ascii_lowercase):
+    for letter in my_Test_List:
         url = "http://abfonts.freehostia.com/opti/fonts-" + letter + "/index.htm"
         links.append(url)
     return links
@@ -62,13 +66,16 @@ def click_link(driver, link_url):
     link.click()
     driver.execute_script("javascript:void(0);")
     time.sleep(1)  # Wait for the download button to appear
-    download_button = driver.find_element(By.XPATH, '//a[contains(text(), "Download")]')
-    download_button.click()
-    time.sleep(2)  # Wait for the download to complete
-    driver.switch_to.window(driver.window_handles[-1])  # switch to the popup window
-    popup_close_button = driver.find_element(By.XPATH, '//span/a/img[@alt="Close"]')
-    popup_close_button.click()
-    driver.switch_to.window(driver.window_handles[0])  # switch back to the main window
+    try:
+        download_button = driver.find_element(By.XPATH, '//a[contains(text(), "Download")]')
+        download_button.click()
+        time.sleep(2)  # Wait for the download to complete
+        driver.switch_to.window(driver.window_handles[-1])  # switch to the popup window
+        popup_close_button = driver.find_element(By.XPATH, '//span/a/img[@alt="Close"]')
+        popup_close_button.click()
+        driver.switch_to.window(driver.window_handles[0])  # switch back to the main window
+    except NoSuchElementException:
+        pass
 
 
 def install_fonts_from_downloads():
@@ -105,8 +112,10 @@ def main():
             click_link(driver, current_link)
         driver.quit()
 
-    install_fonts_from_downloads()
+    # install_fonts_from_downloads()
 
 
 if __name__ == '__main__':
     main()
+    # install_fonts_from_downloads()
+
