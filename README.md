@@ -1,5 +1,5 @@
 # OPTIFonts
-Download & Install All OPTI Fonts
+Download & Install All OPTI Fonts (In Windows)
 
 # How to set up dependencies:
 - Install Google Chrome
