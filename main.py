@@ -6,10 +6,50 @@ from selenium import webdriver
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 import os
-import subprocess
 import shutil
 import glob
-import fontTools
+import ctypes
+from ctypes import wintypes
+
+try:
+    import winreg
+except ImportError:
+    import _winreg as winreg
+
+user32 = ctypes.WinDLL('user32', use_last_error=True)
+gdi32 = ctypes.WinDLL('gdi32', use_last_error=True)
+
+FONTS_REG_PATH = r'Software\Microsoft\Windows NT\CurrentVersion\Fonts'
+
+HWND_BROADCAST = 0xFFFF
+SMTO_ABORTIFHUNG = 0x0002
+WM_FONTCHANGE = 0x001D
+GFRI_DESCRIPTION = 1
+GFRI_ISTRUETYPE = 3
+
+if not hasattr(wintypes, 'LPDWORD'):
+    wintypes.LPDWORD = ctypes.POINTER(wintypes.DWORD)
+
+user32.SendMessageTimeoutW.restype = wintypes.LPVOID
+user32.SendMessageTimeoutW.argtypes = (
+    wintypes.HWND,   # hWnd
+    wintypes.UINT,   # Msg
+    wintypes.LPVOID, # wParam
+    wintypes.LPVOID, # lParam
+    wintypes.UINT,   # fuFlags
+    wintypes.UINT,   # uTimeout
+    wintypes.LPVOID  # lpdwResult
+)
+
+gdi32.AddFontResourceW.argtypes = (
+    wintypes.LPCWSTR,) # lpszFilename
+
+# http://www.undocprint.org/winspool/getfontresourceinfo
+gdi32.GetFontResourceInfoW.argtypes = (
+    wintypes.LPCWSTR, # lpszFilename
+    wintypes.LPDWORD, # cbBuffer
+    wintypes.LPVOID,  # lpBuffer
+    wintypes.DWORD)   # dwQueryType
 
 
 def get_links(page_url):
@@ -108,20 +148,71 @@ def unzip_fonts_from_downloads():
     remove_zip_files(zip_files)
 
 
+def install_font(src_path):
+    # copy the font to the Windows Fonts folder
+    dst_path = os.path.join(
+        os.environ['SystemRoot'], 'Fonts', os.path.basename(src_path)
+    )
+    shutil.copy(src_path, dst_path)
+
+    # load the font in the current session
+    if not gdi32.AddFontResourceW(dst_path):
+        os.remove(dst_path)
+        raise WindowsError('AddFontResource failed to load "%s"' % src_path)
+
+    # notify running programs
+    user32.SendMessageTimeoutW(
+        HWND_BROADCAST, WM_FONTCHANGE, 0, 0, SMTO_ABORTIFHUNG, 1000, None
+    )
+
+    # store the fontname/filename in the registry
+    filename = os.path.basename(dst_path)
+    fontname = os.path.splitext(filename)[0]
+
+    # try to get the font's real name
+    cb = wintypes.DWORD()
+    if gdi32.GetFontResourceInfoW(
+            filename, ctypes.byref(cb), None, GFRI_DESCRIPTION
+    ):
+        buf = (ctypes.c_wchar * cb.value)()
+        if gdi32.GetFontResourceInfoW(
+                filename, ctypes.byref(cb), buf, GFRI_DESCRIPTION
+        ):
+            fontname = buf.value
+
+    is_truetype = wintypes.BOOL()
+    cb.value = ctypes.sizeof(is_truetype)
+    gdi32.GetFontResourceInfoW(
+        filename, ctypes.byref(cb), ctypes.byref(is_truetype), GFRI_ISTRUETYPE
+    )
+
+    if is_truetype:
+        fontname += ' (TrueType)'
+
+    with winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE, FONTS_REG_PATH, 0, winreg.KEY_SET_VALUE
+    ) as key:
+        winreg.SetValueEx(key, fontname, 0, winreg.REG_SZ, filename)
+
+
 def install_fonts_from_temp_folder():
     temp_dir = os.path.expanduser("~") + os.sep + "Downloads" + os.sep + "temp"
     # Ask user if they want to install the fonts
-    install_fonts = input("Do you want to install the fonts? (y/n) ")
+    install_fonts = input("Do you want to install all the fonts? (y/n) ")
     if install_fonts.lower() != 'y':
         return
 
     # Find any .ttf or .otf files in the temporary directory and install them
     font_files = glob.glob(temp_dir + '/*.ttf') + glob.glob(temp_dir + '/*.otf')
     for font_file in font_files:
-        subprocess.call(['powershell.exe', '-Command', 'Install-Font', font_file])
+        print("Installing:\t", font_file)
+        install_font(font_file)
 
     # Delete the temporary directory
-    # shutil.rmtree(temp_dir, ignore_errors=True)
+    delete_temp_folder = input("Do you want to delete the temp folder? (y/n) ")
+    if delete_temp_folder.lower() != 'y':
+        return
+    shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def main():
@@ -139,7 +230,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-    print("All font .zip files downloaded in the Downloads/temp folder. Install them manually.")
     unzip_fonts_from_downloads()
-    # install_fonts_from_temp_folder()
+    install_fonts_from_temp_folder()
 
